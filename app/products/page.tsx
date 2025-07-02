@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -63,7 +64,7 @@ export default function ProductsPage() {
   const [agendarMode, setAgendarMode] = useState(false)
   const [selectedClient, setSelectedClient] = useState("")
   const [selectedDate, setSelectedDate] = useState("")
-  const [clientsList, setClientsList] = useState<{ id: string; name: string }[]>(mockClientsList)
+  const [clientsList] = useState<{ id: string; name: string }[]>(mockClientsList)
 
   const productsPerPage = 21
   const totalPages = Math.ceil(products.length / productsPerPage)
@@ -103,9 +104,6 @@ export default function ProductsPage() {
     return Object.values(cart).reduce((sum, quantity) => sum + quantity, 0)
   }
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
 
   // --- Utilidades para ventas y pedidos ---
   const saveToLocalStorage = (key: string, value: any) => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,22 +16,137 @@ interface Client {
   lastOrderId: string
 }
 
-const mockClients: Client[] = Array.from({ length: 10 }, (_, i) => ({
-  id: `CLI-${String(i + 1).padStart(3, "0")}`,
-  name: "Nombre",
-  surname: "Apellido",
-  phone: "Celular",
-  department: "Departamento",
-  totalOrders: Math.floor(Math.random() * 50) + 1,
-  lastOrderId: `PED-${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`,
-}))
+const mockClients: Client[] = [
+  {
+    id: "CLI-001",
+    name: "Juan",
+    surname: "Pérez",
+    phone: "78945612",
+    department: "AB1",
+    totalOrders: 12,
+    lastOrderId: "PED-101",
+  },
+  {
+    id: "CLI-002",
+    name: "María",
+    surname: "García",
+    phone: "76543210",
+    department: "CD2",
+    totalOrders: 8,
+    lastOrderId: "PED-102",
+  },
+  {
+    id: "CLI-003",
+    name: "Carlos",
+    surname: "López",
+    phone: "71234567",
+    department: "AC3",
+    totalOrders: 15,
+    lastOrderId: "PED-103",
+  },
+  {
+    id: "CLI-004",
+    name: "Ana",
+    surname: "Torrez",
+    phone: "79876543",
+    department: "BD4",
+    totalOrders: 5,
+    lastOrderId: "PED-104",
+  },
+  {
+    id: "CLI-005",
+    name: "Luis",
+    surname: "Mamani",
+    phone: "70123456",
+    department: "DA5",
+    totalOrders: 3,
+    lastOrderId: "PED-105",
+  },
+  {
+    id: "CLI-006",
+    name: "Gabriela",
+    surname: "Rojas",
+    phone: "77788899",
+    department: "CB6",
+    totalOrders: 10,
+    lastOrderId: "PED-106",
+  },
+  {
+    id: "CLI-007",
+    name: "Miguel",
+    surname: "Flores",
+    phone: "79998888",
+    department: "AD2",
+    totalOrders: 7,
+    lastOrderId: "PED-107",
+  },
+  {
+    id: "CLI-008",
+    name: "Patricia",
+    surname: "Vargas",
+    phone: "75556666",
+    department: "BC3",
+    totalOrders: 2,
+    lastOrderId: "PED-108",
+  },
+  {
+    id: "CLI-009",
+    name: "Jorge",
+    surname: "Gutiérrez",
+    phone: "72223333",
+    department: "DA1",
+    totalOrders: 6,
+    lastOrderId: "PED-109",
+  },
+  {
+    id: "CLI-010",
+    name: "Lucía",
+    surname: "Fernández",
+    phone: "73334444",
+    department: "CB4",
+    totalOrders: 9,
+    lastOrderId: "PED-110",
+  },
+]
 
 export default function ClientsPage() {
-  const [clients] = useState<Client[]>(mockClients)
+  const [clients, setClients] = useState<Client[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
   const [newClient, setNewClient] = useState({ name: "", surname: "", phone: "", department: "" })
+
+  // Cargar clientes de localStorage o mock al iniciar
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("clientes")
+      // Si el localStorage existe pero está vacío o es un array vacío, usar mockClients
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setClients(parsed)
+          } else {
+            setClients(mockClients)
+            localStorage.setItem("clientes", JSON.stringify(mockClients))
+          }
+        } catch {
+          setClients(mockClients)
+          localStorage.setItem("clientes", JSON.stringify(mockClients))
+        }
+      } else {
+        setClients(mockClients)
+        localStorage.setItem("clientes", JSON.stringify(mockClients))
+      }
+    }
+  }, [])
+
+  // Guardar clientes en localStorage cada vez que cambian
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("clientes", JSON.stringify(clients))
+    }
+  }, [clients])
 
   const clientsPerPage = 10
   const filteredClients = clients.filter(
@@ -51,7 +166,18 @@ export default function ClientsPage() {
 
   const handleNewClientSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Aquí podrías agregar el nuevo cliente a la lista (mock)
+    // Generar nuevo ID y agregar a la lista
+    const nextId = `CLI-${String(clients.length + 1).padStart(3, "0")}`
+    const client: Client = {
+      id: nextId,
+      name: newClient.name,
+      surname: newClient.surname,
+      phone: newClient.phone,
+      department: newClient.department.toUpperCase(), // asegurar formato
+      totalOrders: 0,
+      lastOrderId: "-",
+    }
+    setClients([client, ...clients])
     setShowModal(false)
     setNewClient({ name: "", surname: "", phone: "", department: "" })
   }
