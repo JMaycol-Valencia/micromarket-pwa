@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,7 +32,7 @@ const mockProducts: Product[] = Array.from({ length: 12 }, (_, i) => ({
 }))
 
 export default function ProductsListPage() {
-  const [products, setProducts] = useState<Product[]>(mockProducts)
+  const [products, setProducts] = useState<Product[]>([])
   const [showModal, setShowModal] = useState(false)
   const [editIndex, setEditIndex] = useState<number | null>(null)
   const [form, setForm] = useState<Omit<Product, "id">>({
@@ -99,6 +99,26 @@ export default function ProductsListPage() {
     }
     setShowModal(false)
   }
+
+  // Cargar productos de localStorage o mock al iniciar
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("productos")
+      if (stored) {
+        setProducts(JSON.parse(stored))
+      } else {
+        setProducts(mockProducts)
+        localStorage.setItem("productos", JSON.stringify(mockProducts))
+      }
+    }
+  }, [])
+
+  // Guardar productos en localStorage cada vez que cambian
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("productos", JSON.stringify(products))
+    }
+  }, [products])
 
   return (
     <div className="flex min-h-screen bg-gray-50">

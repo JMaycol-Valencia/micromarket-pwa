@@ -120,7 +120,6 @@ export default function ClientsPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("clientes")
-      // Si el localStorage existe pero está vacío o es un array vacío, usar mockClients
       if (stored) {
         try {
           const parsed = JSON.parse(stored)
@@ -331,3 +330,4 @@ export default function ClientsPage() {
     </div>
   )
 }
+

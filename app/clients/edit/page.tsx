@@ -16,15 +16,98 @@ interface Client {
   lastOrderId: string
 }
 
-const mockClients: Client[] = Array.from({ length: 10 }, (_, i) => ({
-  id: `CLI-${String(i + 1).padStart(3, "0")}`,
-  name: "Nombre",
-  surname: "Apellido",
-  phone: "Celular",
-  department: "Departamento",
-  totalOrders: Math.floor(Math.random() * 50) + 1,
-  lastOrderId: `PED-${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`,
-}))
+const mockClients: Client[] = [
+  {
+    id: "CLI-001",
+    name: "Sofía",
+    surname: "Morales",
+    phone: "70012345",
+    department: "ab1",
+    totalOrders: 4,
+    lastOrderId: "PED-201",
+  },
+  {
+    id: "CLI-002",
+    name: "Diego",
+    surname: "Salazar",
+    phone: "70123456",
+    department: "cd2",
+    totalOrders: 7,
+    lastOrderId: "PED-202",
+  },
+  {
+    id: "CLI-003",
+    name: "Valeria",
+    surname: "Gutiérrez",
+    phone: "70234567",
+    department: "bc3",
+    totalOrders: 2,
+    lastOrderId: "PED-203",
+  },
+  {
+    id: "CLI-004",
+    name: "Martín",
+    surname: "Rivera",
+    phone: "70345678",
+    department: "ad4",
+    totalOrders: 9,
+    lastOrderId: "PED-204",
+  },
+  {
+    id: "CLI-005",
+    name: "Camila",
+    surname: "Vargas",
+    phone: "70456789",
+    department: "da5",
+    totalOrders: 1,
+    lastOrderId: "PED-205",
+  },
+  {
+    id: "CLI-006",
+    name: "Andrés",
+    surname: "Mendoza",
+    phone: "70567890",
+    department: "cb6",
+    totalOrders: 6,
+    lastOrderId: "PED-206",
+  },
+  {
+    id: "CLI-007",
+    name: "Paula",
+    surname: "Fernández",
+    phone: "70678901",
+    department: "ac1",
+    totalOrders: 3,
+    lastOrderId: "PED-207",
+  },
+  {
+    id: "CLI-008",
+    name: "Javier",
+    surname: "Paz",
+    phone: "70789012",
+    department: "bd2",
+    totalOrders: 5,
+    lastOrderId: "PED-208",
+  },
+  {
+    id: "CLI-009",
+    name: "Mariana",
+    surname: "Suárez",
+    phone: "70890123",
+    department: "db3",
+    totalOrders: 8,
+    lastOrderId: "PED-209",
+  },
+  {
+    id: "CLI-010",
+    name: "Lucas",
+    surname: "Castro",
+    phone: "70901234",
+    department: "ca4",
+    totalOrders: 2,
+    lastOrderId: "PED-210",
+  },
+]
 
 export default function EditClientsPage() {
   const [clients, setClients] = useState<Client[]>(mockClients)

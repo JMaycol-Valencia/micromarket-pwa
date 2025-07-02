@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,13 +12,23 @@ import { X } from "lucide-react"
 export default function LoginPage() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
   const router = useRouter()
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    // Simulate login - in real app, validate credentials
-    if (username && password) {
-      router.push("/dashboard")
+    // Validar contra cajeros registrados
+    if (typeof window !== "undefined") {
+      const cajeros = JSON.parse(localStorage.getItem("cajeros") || "[]")
+      const found = cajeros.find(
+        (c: any) => c.email === username && c.password === password
+      )
+      if (found) {
+        localStorage.setItem("cajero_logueado", JSON.stringify(found))
+        router.push("/dashboard")
+      } else {
+        setError("Correo o contraseña incorrectos")
+      }
     }
   }
 
@@ -32,11 +42,10 @@ export default function LoginPage() {
               <X className="w-8 h-8 text-gray-400" />
             </div>
           </div>
-
           <form onSubmit={handleLogin} className="space-y-4">
             <Input
               type="text"
-              placeholder="Username"
+              placeholder="Correo"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="bg-white border-gray-300"
@@ -44,15 +53,18 @@ export default function LoginPage() {
             />
             <Input
               type="password"
-              placeholder="Password"
+              placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="bg-white border-gray-300"
               required
             />
+            {error && (
+              <div className="text-red-600 text-sm text-center">{error}</div>
+            )}
             <div className="flex justify-center pt-4">
               <Button type="submit" className="bg-black text-white px-8 py-2 hover:bg-gray-800">
-                Button
+                Ingresar
               </Button>
             </div>
           </form>

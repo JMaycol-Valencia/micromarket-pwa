@@ -48,11 +48,7 @@ const mockProducts: Product[] = Array.from({ length: 21 }, (_, i) => ({
   stock: Math.floor(Math.random() * 100) + 1,
 }))
 
-// Simulación de clientes registrados
-const mockClientsList = Array.from({ length: 10 }, (_, i) => ({
-  id: `CLI-${String(i + 1).padStart(3, "0")}`,
-  name: `Cliente ${i + 1}`,
-}))
+// Elimina mockClientsList y usa clientes reales de localStorage
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>(mockProducts)
@@ -64,7 +60,7 @@ export default function ProductsPage() {
   const [agendarMode, setAgendarMode] = useState(false)
   const [selectedClient, setSelectedClient] = useState("")
   const [selectedDate, setSelectedDate] = useState("")
-  const [clientsList] = useState<{ id: string; name: string }[]>(mockClientsList)
+  const [clientsList, setClientsList] = useState<{ id: string; name: string; surname: string }[]>([])
 
   const productsPerPage = 21
   const totalPages = Math.ceil(products.length / productsPerPage)
@@ -119,6 +115,36 @@ export default function ProductsPage() {
     return []
   }
 
+  // --- Cargar productos desde localStorage ---
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("productos")
+      if (stored) {
+        setProducts(JSON.parse(stored))
+      } else {
+        setProducts(mockProducts)
+        localStorage.setItem("productos", JSON.stringify(mockProducts))
+      }
+    }
+  }, [])
+
+  // Cargar clientes reales desde localStorage para agendar
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("clientes")
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          if (Array.isArray(parsed)) {
+            setClientsList(parsed)
+          }
+        } catch {
+          setClientsList([])
+        }
+      }
+    }
+  }, [])
+
   // --- Vender directo ---
   const handleVender = () => {
     // Guardar venta en "reports"
@@ -142,6 +168,11 @@ export default function ProductsPage() {
           : prod
       )
     )
+    saveToLocalStorage("productos", products.map(prod =>
+      cart[prod.id]
+        ? { ...prod, stock: Math.max(0, prod.stock - cart[prod.id]) }
+        : prod
+    ))
     setShowSuccess({ show: true, message: `Venta realizada con éxito. Total: Bs ${totalCart}` })
     setCart({})
     setShowCart(false)
@@ -157,9 +188,10 @@ export default function ProductsPage() {
   const handleVenderAgendado = () => {
     // Guardar pedido en "pedidos"
     const pedidos = getFromLocalStorage("pedidos")
+    const clientObj = clientsList.find(c => c.id === selectedClient)
     const pedido = {
       id: `PED-${Date.now()}`,
-      client: clientsList.find(c => c.id === selectedClient)?.name || "",
+      client: clientObj ? `${clientObj.name} ${clientObj.surname}` : "",
       clientId: selectedClient,
       productQuantity: cartItems.reduce((sum, p) => sum + (cart[p.id] || 0), 0),
       amount: totalCart,
@@ -182,6 +214,11 @@ export default function ProductsPage() {
           : prod
       )
     )
+    saveToLocalStorage("productos", products.map(prod =>
+      cart[prod.id]
+        ? { ...prod, stock: Math.max(0, prod.stock - cart[prod.id]) }
+        : prod
+    ))
     setShowSuccess({ show: true, message: `Pedido agendado con éxito para ${pedido.client} el ${selectedDate}` })
     setCart({})
     setShowCart(false)
@@ -266,149 +303,147 @@ export default function ProductsPage() {
                         min={1}
                         max={product.stock}
                         value={cart[product.id]}
-                        onChange={e => handleCartQuantityChange(product.id, e.target.value)}
-                        className="w-14 h-8 text-xs border rounded px-2"
+                        onChange={(e) => handleCartQuantityChange(product.id, e.target.value)}
+                        className="w-16"
                       />
                       <Button
-                        size="sm"
-                        variant="outline"
-                        className="ml-2 text-xs px-2 active:scale-95 transition"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleRemoveFromCart(product.id)}
+                        className="text-red-500 hover:bg-red-100"
                       >
-                        Eliminar
+                        <X className="w-5 h-5" />
                       </Button>
                     </div>
                   ))
                 )}
               </div>
-              {/* Total y acciones */}
-              <div className="p-6 border-t border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-lg font-bold">TOTAL</span>
-                  <span className="text-lg font-bold">{totalCart} Bs</span>
-                </div>
-                <div className="flex gap-4 mb-2">
-                  <Button
-                    className="bg-black text-white flex-1 hover:bg-gray-800 active:scale-95 transition"
-                    onClick={handleVender}
-                    disabled={cartItems.length === 0 || agendarMode}
-                  >
-                    Vender
-                  </Button>
-                  <Button
-                    className="bg-black text-white flex-1 hover:bg-gray-800 active:scale-95 transition"
-                    onClick={handleAgendar}
-                    disabled={cartItems.length === 0 || agendarMode}
-                  >
-                    Agendar
-                  </Button>
-                </div>
-                {/* Inputs de agendar */}
-                {agendarMode && (
-                  <div className="space-y-4 mt-2">
-                    <select
-                      className="w-full border rounded px-3 py-2 text-sm"
-                      value={selectedClient}
-                      onChange={e => setSelectedClient(e.target.value)}
-                    >
-                      <option value="">Selecciona un cliente</option>
-                      {clientsList.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="date"
-                      className="w-full border rounded px-3 py-2 text-sm"
-                      value={selectedDate}
-                      onChange={e => setSelectedDate(e.target.value)}
-                      min={new Date().toISOString().split("T")[0]}
-                    />
-                    <Button
-                      className="bg-black text-white w-full hover:bg-gray-800 active:scale-95 transition"
-                      onClick={handleVenderAgendado}
-                      disabled={!selectedClient || !selectedDate}
-                    >
-                      Vender
-                    </Button>
+              {cartItems.length > 0 && (
+                <div className="p-6 border-t border-gray-200">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="font-semibold">Total:</span>
+                    <span className="text-lg font-bold">Bs {totalCart}</span>
                   </div>
-                )}
-              </div>
+                  {agendarMode ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Cliente</label>
+                        <select
+                          className="w-full border rounded px-3 py-2"
+                          value={selectedClient}
+                          onChange={(e) => setSelectedClient(e.target.value)}
+                        >
+                          <option value="">Selecciona un cliente</option>
+                          {clientsList.map((client) => (
+                            <option key={client.id} value={client.id}>
+                              {client.name} {client.surname}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Fecha de entrega</label>
+                        <Input
+                          type="date"
+                          value={selectedDate}
+                          onChange={(e) => setSelectedDate(e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        className="w-full bg-green-600 text-white hover:bg-green-700"
+                        onClick={handleVenderAgendado}
+                        disabled={!selectedClient || !selectedDate}
+                      >
+                        Agendar Pedido
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1 bg-green-600 text-white hover:bg-green-700"
+                        onClick={handleVender}
+                      >
+                        Vender
+                      </Button>
+                      <Button
+                        className="flex-1 bg-blue-600 text-white hover:bg-blue-700"
+                        onClick={handleAgendar}
+                      >
+                        Agendar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Contenido principal */}
-        <div className="p-6">
-          {/* Products Grid */}
-          <div className="grid grid-cols-7 gap-4 mb-8">
-            {currentProducts.map((product) => (
-              <Card key={product.id} className="bg-white">
-                <CardContent className="p-4 text-center">
+        {/* Lista de productos */}
+        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {currentProducts.map((product) => (
+            <Card key={product.id} className="flex flex-col">
+              <CardContent className="flex-1 flex flex-col justify-between p-4">
+                <div>
+                  {/* Imagen por default */}
                   <div className="w-full h-24 bg-gray-100 border border-gray-300 rounded mb-3 flex items-center justify-center">
-                    <X className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="font-medium text-sm mb-1">{product.name}</h3>
-                  <p className="text-xs text-gray-500 mb-1">{product.unit}</p>
-                  <p className="text-xs text-gray-500 mb-1">Bs {product.price}</p>
-                  <p className="text-xs text-gray-500 mb-3">stock: {product.stock}</p>
-                  <div className="flex items-center justify-between gap-2 mt-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={product.stock}
-                      value={quantities[product.id] || 1}
-                      onChange={e => handleQuantityChange(product.id, e.target.value)}
-                      className="w-14 h-8 text-xs border rounded px-2 mr-2"
+                    <img
+                      src={`https://source.unsplash.com/seed/${product.id}/80x80?grocery,food`}
+                      alt={product.name}
+                      className="w-16 h-16 object-cover rounded"
+                      onError={e => (e.currentTarget.style.display = "none")}
                     />
-                    <Button
-                      size="sm"
-                      className="bg-black text-white hover:bg-gray-800 text-xs px-3 h-8 active:scale-95 transition"
-                      onClick={() => addToCart(product.id)}
-                      disabled={product.stock === 0}
-                    >
-                      Agregar
-                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          {/* Paginación */}
-          <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-              {"<<"}
-            </Button>
+                  <div className="font-bold text-lg">{product.name}</div>
+                  <div className="text-xs text-gray-500">{product.unit}</div>
+                  <div className="text-xs text-gray-500">Stock: {product.stock}</div>
+                </div>
+                <div className="flex items-center mt-4 gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={product.stock}
+                    value={quantities[product.id] || 1}
+                    onChange={(e) => handleQuantityChange(product.id, e.target.value)}
+                    className="w-16"
+                  />
+                  <Button
+                    className="flex-1 bg-black text-white hover:bg-gray-800"
+                    onClick={() => addToCart(product.id)}
+                    disabled={product.stock === 0}
+                  >
+                    Agregar Bs {product.price}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 my-6">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
             >
-              {"<"}
+              Anterior
             </Button>
-            <span className="text-sm font-medium px-2">1</span>
-            <span className="text-sm px-2">2</span>
-            <span className="text-sm px-2">...</span>
-            <span className="text-sm px-2">16</span>
-            <span className="text-sm px-2">17</span>
+            <span className="text-sm font-medium">
+              Página {currentPage} de {totalPages}
+            </span>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
-              {">"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-            >
-              {">>"}
+              Siguiente
             </Button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

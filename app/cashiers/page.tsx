@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,8 @@ interface Cashier {
   exitTime: string
   jornada: string
   address: string
+  email: string
+  password: string
 }
 
 const mockCashiers: Cashier[] = [
@@ -26,6 +28,8 @@ const mockCashiers: Cashier[] = [
     exitTime: "16:00",
     jornada: "mañana",
     address: "Av. Principal 123",
+    email: "pedro@micromarket.com",
+    password: "123456",
   },
   {
     id: "CAJ-002",
@@ -36,6 +40,8 @@ const mockCashiers: Cashier[] = [
     exitTime: "22:00",
     jornada: "tarde",
     address: "Calle Secundaria 456",
+    email: "lucia@micromarket.com",
+    password: "123456",
   },
   {
     id: "CAJ-003",
@@ -46,11 +52,13 @@ const mockCashiers: Cashier[] = [
     exitTime: "22:00",
     jornada: "completo",
     address: "Zona Norte 789",
+    email: "carlos@micromarket.com",
+    password: "123456",
   },
 ]
 
 export default function CashiersPage() {
-  const [cashiers, setCashiers] = useState<Cashier[]>(mockCashiers)
+  const [cashiers, setCashiers] = useState<Cashier[]>([])
   const [showModal, setShowModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editCashier, setEditCashier] = useState<Cashier | null>(null)
@@ -60,6 +68,8 @@ export default function CashiersPage() {
     phone: "",
     jornada: "mañana",
     address: "",
+    email: "",
+    password: "",
   })
   const [errorMsg, setErrorMsg] = useState("")
 
@@ -103,10 +113,12 @@ export default function CashiersPage() {
         exitTime,
         jornada: newCashier.jornada,
         address: newCashier.address,
+        email: newCashier.email,
+        password: newCashier.password,
       },
     ])
     setShowModal(false)
-    setNewCashier({ name: "", surname: "", phone: "", jornada: "mañana", address: "" })
+    setNewCashier({ name: "", surname: "", phone: "", jornada: "mañana", address: "", email: "", password: "" })
     setErrorMsg("")
   }
 
@@ -132,26 +144,56 @@ export default function CashiersPage() {
     setCashiers(cashiers.filter((cashier) => cashier.id !== id))
   }
 
+  // Cargar cajeros de localStorage o mock al iniciar
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("cajeros")
+      let loaded: Cashier[] = []
+      if (stored) {
+        try {
+          loaded = JSON.parse(stored)
+        } catch {
+          loaded = []
+        }
+      }
+      // Siempre incluir los mockCashiers por defecto (sin duplicar)
+      const merged = [
+        ...mockCashiers.filter(
+          (mock) => !loaded.some((c) => c.email === mock.email)
+        ),
+        ...loaded,
+      ]
+      setCashiers(merged)
+      localStorage.setItem("cajeros", JSON.stringify(merged))
+    }
+  }, [])
+
+  // Guardar cajeros en localStorage cada vez que cambian
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("cajeros", JSON.stringify(cashiers))
+    }
+  }, [cashiers])
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-
       <div className="flex-1">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <h1 className="text-2xl font-bold">Cajeros</h1>
         </div>
-
         {/* Content */}
         <div className="p-6">
           {/* Cashiers Table */}
           <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-            <div className="grid grid-cols-7 gap-4 p-4 border-b border-gray-200 font-medium text-sm text-gray-600">
-              {/* <div></div> */}
+            <div className="grid grid-cols-9 gap-4 p-4 border-b border-gray-200 font-medium text-sm text-gray-600">
               <div>ID Cajero</div>
               <div>Nombre</div>
               <div>Apellido</div>
               <div>Celular</div>
+              <div>Correo</div>
+              <div>Contraseña</div>
               <div>Hora entrada</div>
               <div>Hora Salida</div>
               <div>Acciones</div>
@@ -159,13 +201,16 @@ export default function CashiersPage() {
             {cashiers.map((cashier) => (
               <div
                 key={cashier.id}
-                className="grid grid-cols-7 gap-4 p-4 border-b border-gray-100 text-sm items-center"
+                className="grid grid-cols-9 gap-4 p-4 border-b border-gray-100 text-sm items-center"
               >
-                {/* <div></div> */}
                 <div>{cashier.id}</div>
                 <div>{cashier.name}</div>
                 <div>{cashier.surname}</div>
                 <div>{cashier.phone}</div>
+                <div>{cashier.email}</div>
+                <div>
+                  <span className="font-mono text-xs">{cashier.password}</span>
+                </div>
                 <div>{cashier.entryTime}</div>
                 <div>{cashier.exitTime}</div>
                 <div className="flex gap-2">
@@ -179,12 +224,10 @@ export default function CashiersPage() {
               </div>
             ))}
           </div>
-
           {/* Mensaje de error si se excede el límite */}
           {errorMsg && (
             <div className="mb-4 text-red-600 font-medium text-center">{errorMsg}</div>
           )}
-
           {/* Nuevo Cajero Button */}
           <Button
             className="bg-black text-white hover:bg-gray-800"
@@ -199,7 +242,6 @@ export default function CashiersPage() {
           >
             Nuevo Cajero
           </Button>
-
           {/* Modal para Nuevo Cajero */}
           {showModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -233,6 +275,21 @@ export default function CashiersPage() {
                     onChange={handleNewCashierChange}
                     required
                   />
+                  <Input
+                    name="email"
+                    placeholder="Correo"
+                    value={newCashier.email}
+                    onChange={handleNewCashierChange}
+                    required
+                  />
+                  <Input
+                    name="password"
+                    type="password"
+                    placeholder="Contraseña"
+                    value={newCashier.password}
+                    onChange={handleNewCashierChange}
+                    required
+                  />
                   <select
                     name="jornada"
                     value={newCashier.jornada}
@@ -262,7 +319,6 @@ export default function CashiersPage() {
               </div>
             </div>
           )}
-
           {/* Modal para Editar Cajero */}
           {showEditModal && editCashier && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -293,6 +349,21 @@ export default function CashiersPage() {
                     name="phone"
                     placeholder="Celular"
                     value={editCashier.phone}
+                    onChange={handleEditCashierChange}
+                    required
+                  />
+                  <Input
+                    name="email"
+                    placeholder="Correo"
+                    value={editCashier.email}
+                    onChange={handleEditCashierChange}
+                    required
+                  />
+                  <Input
+                    name="password"
+                    type="password"
+                    placeholder="Contraseña"
+                    value={editCashier.password}
                     onChange={handleEditCashierChange}
                     required
                   />

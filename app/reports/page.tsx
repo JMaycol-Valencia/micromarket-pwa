@@ -296,14 +296,14 @@ export default function ReportsPage() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col h-screen">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <h1 className="text-2xl font-bold">Reportes de Ventas</h1>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 flex-1 flex flex-col min-h-0">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-8 gap-4">
             {/* Calendar */}
             <Card className="w-80">
@@ -398,59 +398,61 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* Sales Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div
-              className={`grid ${
-                selectMode ? "grid-cols-9" : "grid-cols-8"
-              } gap-4 p-4 border-b border-gray-200 font-medium text-sm text-gray-600`}
-            >
-              {selectMode && (
-                <div>
-                  <input
-                    type="checkbox"
-                    checked={selectedSales.length === filteredSales.length && filteredSales.length > 0}
-                    onChange={handleSelectAll}
-                  />
-                </div>
-              )}
-              <div>ID Pedido/Venta</div>
-              <div>Cliente</div>
-              <div>cantidad productos</div>
-              <div>Cajero</div>
-              <div>Tipo de pago</div>
-              <div>Monto</div>
-              <div>Fecha</div>
-              <div>Imprimir</div>
-            </div>
-            {filteredSales.map((sale) => (
+          {/* Sales Table con scroll */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
               <div
-                key={sale.id}
-                className={`grid ${selectMode ? "grid-cols-9" : "grid-cols-8"} gap-4 p-4 border-b border-gray-100 text-sm items-center`}
+                className={`grid ${
+                  selectMode ? "grid-cols-9" : "grid-cols-8"
+                } gap-4 p-4 border-b border-gray-200 font-medium text-sm text-gray-600 `}
               >
                 {selectMode && (
                   <div>
                     <input
                       type="checkbox"
-                      checked={selectedSales.includes(sale.id)}
-                      onChange={() => handleSelectSale(sale.id)}
+                      checked={selectedSales.length === filteredSales.length && filteredSales.length > 0}
+                      onChange={handleSelectAll}
                     />
                   </div>
                 )}
-                <div>{sale.id}</div>
-                <div>{sale.client}</div>
-                <div>{sale.productQuantity}</div>
-                <div>{sale.cashier}</div>
-                <div>{sale.paymentType}</div>
-                <div>Bs {sale.amount.toFixed(2)}</div>
-                <div>{sale.date}</div>
-                <div>
-                  <Button size="sm" variant="outline" style={{ minWidth: 36 }} onClick={() => handlePrint(sale.id)}>
-                    <Printer className="w-4 h-4" />
-                  </Button>
-                </div>
+                <div>ID Pedido/Venta</div>
+                <div>Cliente</div>
+                <div>cantidad productos</div>
+                <div>Cajero</div>
+                <div>Tipo de pago</div>
+                <div>Monto</div>
+                <div>Fecha</div>
+                <div>Imprimir</div>
               </div>
-            ))}
+              {filteredSales.map((sale) => (
+                <div
+                  key={sale.id}
+                  className={`grid ${selectMode ? "grid-cols-9" : "grid-cols-8"} gap-4 p-4 border-b border-gray-100 text-sm items-center`}
+                >
+                  {selectMode && (
+                    <div>
+                      <input
+                        type="checkbox"
+                        checked={selectedSales.includes(sale.id)}
+                        onChange={() => handleSelectSale(sale.id)}
+                      />
+                    </div>
+                  )}
+                  <div>{sale.id}</div>
+                  <div>{sale.client}</div>
+                  <div>{sale.productQuantity}</div>
+                  <div>{sale.cashier}</div>
+                  <div>{sale.paymentType}</div>
+                  <div>Bs {sale.amount.toFixed(2)}</div>
+                  <div>{sale.date}</div>
+                  <div>
+                    <Button size="sm" variant="outline" style={{ minWidth: 36 }} onClick={() => handlePrint(sale.id)}>
+                      <Printer className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         {/* Modal de previsualización PDF */}

@@ -14,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ShoppingCart } from "lucide-react"
 
 // --- Interfaces y Datos Mock ---
 interface Order {
@@ -127,10 +126,6 @@ export default function DashboardPage() {
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Lista de Pedidos</h1>
-            <Button variant="outline" size="sm" className="active:scale-95 transition">
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Carrito
-            </Button>
           </div>
         </div>
 

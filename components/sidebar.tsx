@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { ShoppingCart, Package, Users, FileText, Calculator, Store, User, Power } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useMemo } from "react"
+import { useMemo, useEffect, useState } from "react"
 
 const navigation = [
   { name: "Pedidos", href: "/dashboard", icon: ShoppingCart },
@@ -35,6 +35,29 @@ const moduleSubmenus: Record<string, { name: string; href: string; icon: any }[]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const [cajero, setCajero] = useState<{ name: string; surname: string; email: string } | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cajeroStr = localStorage.getItem("cajero_logueado")
+      if (cajeroStr) {
+        try {
+          const cajeroObj = JSON.parse(cajeroStr)
+          setCajero({
+            name: cajeroObj.name,
+            surname: cajeroObj.surname,
+            email: cajeroObj.email,
+          })
+        } catch {
+          setCajero(null)
+        }
+      } else {
+        setCajero(null)
+      }
+    }
+  }, [])
+
   // Determinar el módulo base por la ruta
   const moduleBase = useMemo(() => {
     if (pathname.startsWith("/products")) return "/products"
@@ -46,6 +69,13 @@ export function Sidebar() {
 
   const showSubmenu = moduleBase !== "/dashboard"
   const submenu = moduleSubmenus[moduleBase] || []
+
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("cajero_logueado")
+      router.push("/login")
+    }
+  }
 
   return (
     <div className="w-72 bg-white border-r border-gray-200 flex flex-col">
@@ -112,10 +142,24 @@ export function Sidebar() {
         <div className="flex items-center gap-3 text-sm text-gray-600">
           <User className="w-4 h-4" />
           <div>
-            <div className="font-medium">Pauline Lenoir</div>
-            <div className="text-xs text-gray-500">Product Manager</div>
+            {cajero ? (
+              <>
+                <div className="font-medium">{cajero.name} {cajero.surname}</div>
+                <div className="text-xs text-gray-500">{cajero.email}</div>
+              </>
+            ) : (
+              <>
+                <div className="font-medium">No logueado</div>
+                <div className="text-xs text-gray-500">-</div>
+              </>
+            )}
           </div>
-          <Power className="w-4 h-4 ml-auto cursor-pointer hover:text-gray-800" />
+          <span title="Cerrar sesión">
+            <Power
+              className="w-4 h-4 ml-auto cursor-pointer hover:text-gray-800"
+              onClick={handleLogout}
+            />
+          </span>
         </div>
       </div>
     </div>
