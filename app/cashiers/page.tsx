@@ -28,8 +28,8 @@ const mockCashiers: Cashier[] = [
     exitTime: "16:00",
     jornada: "mañana",
     address: "Av. Principal 123",
-    email: "pedro@micromarket.com",
-    password: "123456",
+    email: "",
+    password: "pedro@micromarket.com123456",
   },
   {
     id: "CAJ-002",

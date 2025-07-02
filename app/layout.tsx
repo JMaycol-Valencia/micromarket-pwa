@@ -1,23 +1,28 @@
-import type React from "react"
-import type { Metadata } from "next/dist/types"
-import { Inter } from "next/font/google"
-import "./globals.css"
+import type React from "react";
+import type { Metadata } from "next/dist/types";
+import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Sistema de Ventas - Micromercado",
   description: "Sistema completo de gestión para micromercados",
-}
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+        <link rel="icon" href="/icon-192x192.png" />
+      </head>
+      <body>
+        {children}
+      </body>
     </html>
   )
 }
